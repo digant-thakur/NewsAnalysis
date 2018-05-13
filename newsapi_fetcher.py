@@ -10,6 +10,7 @@ class NewsFetcher:
         self.LastDate = datetime.today().date()
         self.StartDate = None
         self.news = {}
+        self.urlToImage = None
 
     def getStartDate(self):
         return self.StartDate
@@ -26,9 +27,13 @@ class NewsFetcher:
     def get_news_dict(self):
         return self.news
 
+    def get_cover_image(self):
+        return self.urlToImage
+
     def get_news(self, topic, domainName=None, sort='relevancy'):
         first_page = self.newsApi.get_everything(q=topic, from_parameter=self.StartDate, domains=domainName,
                                                  to=self.LastDate, language='en', sort_by=sort, page=1)
+        self.urlToImage = first_page['articles'][0]['urlToImage']
         hits = first_page['totalResults']
         print ("Total Hits: %d" % hits)
         for article in first_page['articles']:

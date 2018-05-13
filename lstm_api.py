@@ -1,5 +1,4 @@
 import re
-import collections
 import operator
 import numpy as np
 import tensorflow as tf
@@ -15,7 +14,9 @@ wordsList = np.load('training_data/wordsList.npy').tolist()
 wordsList = [word.decode('UTF-8') for word in wordsList]
 
 
-def lstm_model(news_list):
+def lstm_model(News):
+    news_dict = News.get_news_dict()
+    news_list = list(news_dict.keys())
     wordVectors = np.load('training_data/wordVectors.npy')
     tf.reset_default_graph()
 
@@ -49,28 +50,23 @@ def lstm_model(news_list):
 
     for article in news_list:
         inputText = article
-        #print(article)
         inputMatrix = getSentenceMatrix(inputText)
         predictedSentiment = sess.run(prediction, {input_data: inputMatrix})[0]
         if predictedSentiment[0] > predictedSentiment[1]:
-            #print ("Positive Sentiment")
             positiveNews[article] = predictedSentiment[0]
             positiveCount = positiveCount + 1
         else:
-            #print ("Negative Sentiment")
             negativeNews[article] = predictedSentiment[1]
-            # positiveCount = positiveCount+predictedSentiment[0]
             negativeCount = negativeCount + 1
     print("Positive {} Negative {}".format(positiveCount, negativeCount))
 
     sorted_positive = sorted(positiveNews.items(), key = operator.itemgetter(1), reverse=True)[0:3]
-    sorted_negative = sorted(negativeNews.items(), key=operator.itemgetter(1), reverse=True)[0:3]
-    sorted_positive = list(zip(*sorted_positive))[0]
-    sorted_negative = list(zip(*sorted_negative))[0]
-
-    result = [positiveCount, sorted_positive, negativeCount, sorted_negative]
-
-    return result
+    sorted_negative = sorted(negativeNews.items(), key = operator.itemgetter(1), reverse=True)[0:3]
+    sorted_positive = list(list(zip(*sorted_positive))[0])
+    sorted_negative = list(list(zip(*sorted_negative))[0])
+    news_payload = return_url_headline(News, sorted_positive, sorted_negative)
+    payload = [positiveCount, negativeCount, news_payload, News.urlToImage]
+    return payload
     
 def cleanSentences(string):
     strip_special_chars = re.compile("[^A-Za-z0-9 ]+")
@@ -91,13 +87,19 @@ def getSentenceMatrix(sentence):
     return sentenceMatrix
 
 
-def get_sentiment(news_topic):
-    #news_topic = input("Topic?: ")
+def return_url_headline(News, positive_top3, negative_top3):
+    positive_news = {}
+    negative_news = {}
+    for page in positive_top3:
+        positive_news[page] = News.news[page]
+    for page in negative_top3:
+        negative_news[page] = News.news[page]
+    return {'positiveNews':positive_news,'negativeNews':negative_news}
+
+def get_sentiment(news_topic,no_of_weeks = 1):
     News = NewsFetcher()
-    News.set_start_date_from_now(2)
-    News.get_news(news_topic, sort='relevancy', domainName='thehindu.com')
-    news_dict = News.get_news_dict()
-    news_list = list(news_dict.keys())
-    result = lstm_model(news_list)
+    News.set_start_date_from_now(no_of_weeks)
+    News.get_news(news_topic, sort='relevancy', domainName='firstpost.com')
+    result = lstm_model(News)
     return result
 
