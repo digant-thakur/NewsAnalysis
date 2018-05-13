@@ -7,7 +7,10 @@ app = Flask(__name__)
 @app.route('/success/<value>')
 def success(value):
 	results = lstm_api.get_sentiment(value)
-	return render_template('output.html',results = results)
+	labels = ['Positive sentiment NEWS','Negative sentiment NEWS']
+	values = [results[0],results[1]]
+	colors = [ "#F7464A", "#46BFBD"]
+	return render_template('output.html',results = results, set=zip(values, labels, colors))
 	
 @app.route('/search',methods = ['POST','GET'])
 def search():

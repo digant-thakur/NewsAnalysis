@@ -89,12 +89,17 @@ def getSentenceMatrix(sentence):
 
 def return_url_headline(News, positive_top3, negative_top3):
     positive_news = {}
+    a = []
     negative_news = {}
     for page in positive_top3:
-        positive_news[page] = News.news[page]
+        #positive_news[page] = News.news[page]
+        a.append(page)
+        a.append(News.news[page])
     for page in negative_top3:
         negative_news[page] = News.news[page]
-    return {'positiveNews':positive_news,'negativeNews':negative_news}
+        a.append(page)
+        a.append(News.news[page])
+    return a
 
 def get_sentiment(news_topic,no_of_weeks = 1):
     News = NewsFetcher()
